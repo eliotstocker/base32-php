@@ -4,7 +4,10 @@ namespace maximal\base32;
 
 use InvalidArgumentException;
 
-
+/**
+ * Class Base32
+ * @package maximal\base32
+ */
 class Base32
 {
 	const ALPHA_DEFAULT = '0123456789ABCDEFGHJKMNPQRTUVWXYZ';

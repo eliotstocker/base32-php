@@ -1,0 +1,12 @@
+#### Glob syntax
+syntax: glob
+
+## Directory-based project format:
+.idea/
+
+## File-based project format:
+*.ipr
+*.iws
+
+# mpeltonen/sbt-idea plugin
+.idea_modules/
