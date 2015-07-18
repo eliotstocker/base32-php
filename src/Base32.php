@@ -7,13 +7,24 @@ use InvalidArgumentException;
 
 class Base32
 {
-	protected $alphabet = '0123456789ABCDEFGHJKMNPQRTUVWXYZ';
+	const ALPHA_DEFAULT = '0123456789ABCDEFGHJKMNPQRTUVWXYZ';
+	// @link https://en.wikipedia.org/wiki/Base32
+	const ALPHA_RFC4648 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+	const ALPHA_EXTHEX  = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
+	const ALPHA_NATAREA = '0123456789ABCDFGHJKLMNPQRSTVWXYZ';
+
+
+	protected $alphabet = null;
 	protected $table = null;
 	protected $lookup = null;
-	
+
+
+	/**
+	 * @param null $alphabet
+	 */
 	public function __construct($alphabet = null) {
 		if ($alphabet === null) {
-			$alphabet = $this->alphabet;
+			$alphabet = self::ALPHA_DEFAULT;
 		}
 
 		if (!is_string($alphabet)) {
@@ -34,18 +45,22 @@ class Base32
 		$this->alphabet = $alphabet;
 		$this->table = $table;
 		$this->lookup = $lookup;
-		
-		//var_dump($alphabet, $table);
-    }
-    
+	}
+
+	/**
+	 * Encode the string to Base32.
+	 * @param $string
+	 * @return string
+	 */
 	public function encode($string)
 	{
 		$reminder = 0;
 		$reminderBits = 0;
-		
+		$ord = 0;
+
 		$table = $this->table;
 		$result = '';
-		
+
 		for ($i = 0, $len = strlen($string); $i < $len; ++$i) {
 			$ord = ord($string[$i]);
 			$reminderBits = 3 + $reminderBits;
@@ -61,7 +76,7 @@ class Base32
 				$result .= $table[$index];
 			}
 		}
-		
+
 		if ($reminderBits > 0) {
 			$index = $ord & ((0b1 << $reminderBits) - 1);
 			$result .= $table[$index];
@@ -69,18 +84,20 @@ class Base32
 		return $result;
 	}
 
+	/**
+	 * Decode Base32 to string.
+	 * @param $base32
+	 * @return string
+	 */
 	public function decode($base32)
 	{
-		$reminder = 0;
-		$reminderBits = 0;
 		$bits = 0;
-		
-		$table = $this->table;
+
 		$lookup = $this->lookup;
-		
+
 		$chunk = 0;
 		$result = '';
-		
+
 		$len = strlen($base32);
 		for ($i = 0; $i < $len; ++$i) {
 			$char = $base32[$i];
@@ -93,7 +110,7 @@ class Base32
 			$ord = $lookup[$char];
 			$chunk = $chunk << 5 | $ord;
 			$bits += 5;
-			
+
 			if ($bits > 7) {
 				$bits -= 8;
 				$result .= chr($chunk >> $bits & 0b11111111);
@@ -102,7 +119,9 @@ class Base32
 		}
 
 		if ($bits > 0) {
-			$result[strlen($result) - 1] = chr(ord($result[strlen($result) - 1]) | $chunk & ((0b1 << $bits) - 1));
+			$result[strlen($result) - 1] = chr(
+				ord($result[strlen($result) - 1]) | $chunk & ((0b1 << $bits) - 1)
+			);
 		}
 
 		return $result;
@@ -114,8 +133,6 @@ mb_internal_encoding('UTF-8');
 
 
 $base32 = new Base32;
-
-var_dump(0b11111);
 
 var_dump($base32->encode('fzda0'));
 var_dump($base32->decode('CTX68R9G'));
@@ -131,3 +148,6 @@ var_dump($base32->decode('64R34D0'));
 
 var_dump($base32->encode('Привет, мир!'));
 var_dump($base32->decode('U2FX306GQ38B5M5NU612R86GQK8BHMC041'));
+
+var_dump($base32->encode('Поехали!'));
+var_dump($base32->decode('U2FX1FPGPQ8RBM5GU2XX1E11'));
